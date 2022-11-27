@@ -57,7 +57,39 @@ namespace RandomProject
 
                 // PART II
 
+                // base api address
+                var client1 = new HttpClient();
+                client1.BaseAddress = new Uri("https://restcountries.com/v3.1/name/");
+                client1.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+                // selecting country from generated previous addresses
+                var countries = content.Select(x => x.country);
+                Console.WriteLine();
+                foreach (var country in countries)
+                {
+                    // connecting to api
+                    var respone1 = client1.GetAsync(country);
+                    var result1 = respone1.Result;
+
+                    // validating if contry has informating and displaying proper message
+                    if (result1.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine(country + ":");
+
+                        var content1 = await result1.Content.ReadFromJsonAsync<List<Country>>();
+                        foreach (var showMe in content1)
+                        {
+                            Console.WriteLine(showMe.capital[0]);
+                            Console.WriteLine(showMe.population);
+                        }
+                        Console.WriteLine();
+                    }
+                    else
+                    {
+                        Console.WriteLine(country);
+                        Console.WriteLine("No information found!\n");
+                    }
+                }
             }
             catch(Exception ex)
             {
