@@ -9,99 +9,122 @@ namespace RandomProject
     {
         static async Task Main(string[] args)
         {
-            // PART I
-
-            Console.WriteLine("Type number between 5 and 20:");
-
             try
             {
-                string UserInput = "";
-                string numberString = Console.ReadLine();
+                // PART I
 
-                // parsing user input to int and validating if its from 5 to 20
-                int number = Int16.Parse(numberString);
-                if (number >= 5 && number <= 20)
-                {
-                    UserInput = numberString;
-                }
-                else
-                {
-                    Console.WriteLine("Number must be in the range from 5 to 20!");
-                    Environment.Exit(0);
-                }
-
-                // base api address
-                var client = new HttpClient();
-                client.BaseAddress = new Uri("https://random-data-api.com/api/v2/");
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                // variables for creating user defined request
-                string resource = "addresses";
-                string sizeNumber = "?size=";
+                Console.WriteLine("Type number between 5 and 20:");
+                var userInput = ValidateUserInput();
 
                 // connecting to api
-                var response = client.GetAsync($"{resource}{sizeNumber}{UserInput}");
-                var result = response.Result;
-                result.EnsureSuccessStatusCode();
+                var randomAddressClient = InitHttpClient(new Uri("https://random-data-api.com/api/v2/"));
+                var requestUri = $"addresses?size={userInput}";
+                var responseAddresses = await randomAddressClient.GetAsync(requestUri);
 
-                // assigning given data to variable content and displaying on screen
-                var content = await result.Content.ReadFromJsonAsync<List<Address>>();
-                Console.WriteLine();
-                foreach (var address in content)
-                {
-                    Console.WriteLine(JToken.FromObject(address));
-                }
+                // pulling responses & displaying them to the screen
+                responseAddresses.EnsureSuccessStatusCode();
+                var addresses = await responseAddresses.Content.ReadFromJsonAsync<List<Address>>();
+                DisplayAddresses(addresses);
 
 
 
                 // PART II
 
-                // base api address
-                var client1 = new HttpClient();
-                client1.BaseAddress = new Uri("https://restcountries.com/v3.1/name/");
-                client1.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                // connecting to api by country name
+                var randomCountryClient = InitHttpClient(new Uri("https://restcountries.com/v3.1/name/"));
+                var nameCountries = addresses.Select(x => x.Country);
 
-                // selecting country from generated previous addresses
-                var countries = content.Select(x => x.Country);
-                Console.WriteLine();
-                foreach (var country in countries)
-                {
-                    // connecting to api
-                    var respone1 = client1.GetAsync(country);
-                    var result1 = respone1.Result;
+                // creating list for countries to make sorting easier
+                var allCountries = new List<Country>();
 
-                    // validating if contry has informating and displaying proper message
-                    if (result1.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine(country + ":");
+                // adding countries to list
+                await InitAllCountries(randomCountryClient, nameCountries, allCountries);
 
-                        var content1 = await result1.Content.ReadFromJsonAsync<List<Country>>();
-                        foreach (var showMe in content1)
-                        {
-                            if (showMe.Capital?.Any() != true)
-                            {
-                                Console.WriteLine("No capital!");
-                            }
-                            else
-                            {
-                                Console.WriteLine(showMe.Capital.First());
-                            }                            
-                            Console.WriteLine(showMe.Population);
-                            Console.WriteLine(string.Join(", ", showMe.Languages.Select(x => x.Value)));
-                        }
-                        Console.WriteLine();
-                    }
-                    else
-                    {
-                        Console.WriteLine(country);
-                        Console.WriteLine("No information found!\n");
-                    }
-                }
+                // sorting & displaying data
+                var sortedCountries = allCountries.OrderByDescending(x => x.Population);
+                DisplayData(sortedCountries);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+
+        private static void DisplayData(IOrderedEnumerable<Country> sortedCountries)
+        {
+            Console.WriteLine();
+            Console.WriteLine("--------------------");
+            foreach (var sortedCountry in sortedCountries)
+            {
+                Console.WriteLine("Country: {0}\n", sortedCountry.Name.Common);
+                if (sortedCountry.Capital?.Any() != true)
+                {
+                    Console.WriteLine("No capital!");
+                }
+                else
+                {
+                    Console.WriteLine("Capital: {0}", sortedCountry.Capital.First());
+                }
+                Console.WriteLine("Population: {0}", sortedCountry.Population);
+                Console.WriteLine("Languages: {0}", string.Join(", ", sortedCountry.Languages.Select(x => x.Value)));
+                Console.WriteLine("--------------------");
+            }
+            Console.WriteLine();
+        }
+
+        private static async Task InitAllCountries(HttpClient randomCountryClient, IEnumerable<string> nameCountries, List<Country> allCountries)
+        {
+            foreach (var nameCountry in nameCountries)
+            {
+                var responseCountry = await randomCountryClient.GetAsync(nameCountry);
+                if (responseCountry.IsSuccessStatusCode)
+                {
+
+                    var countries = await responseCountry.Content.ReadFromJsonAsync<List<Country>>();
+                    foreach (var country in countries)
+                    {
+                        allCountries.Add(country);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(nameCountry);
+                    Console.WriteLine("No information found!\n");
+                }
+            }
+        }
+
+        private static void DisplayAddresses(List<Address> addresses)
+        {
+            Console.WriteLine();
+            foreach (var address in addresses)
+            {
+                Console.WriteLine(JToken.FromObject(address));
+            }
+        }
+
+        private static HttpClient InitHttpClient(Uri uri)
+        {
+            return new HttpClient { BaseAddress = uri };
+        }
+
+        private static string ValidateUserInput()
+        {
+            // parsing user input to int and validating if its from 5 to 20
+            string UserInput = "";
+            string numberString = Console.ReadLine();
+            int number = Int16.Parse(numberString);
+            if (number >= 5 && number <= 20)
+            {
+                UserInput = numberString;
+            }
+            else
+            {
+                Console.WriteLine("Number must be in the range from 5 to 20!");
+                Environment.Exit(0);
+            }
+
+            return UserInput;
         }
     }
 }
