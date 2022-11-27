@@ -2,7 +2,8 @@
 {
     public class Country
     {
-        public List<string> capital { get; set; }
-        public int population { get; set; }
+        public List<string> Capital { get; set; }
+        public int Population { get; set; }
+        public Dictionary<string,string> Languages { get; set; }
     }
 }

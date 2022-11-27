@@ -2,7 +2,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Newtonsoft.Json.Linq;
-using System.Diagnostics.Metrics;
 
 namespace RandomProject
 {
@@ -63,7 +62,7 @@ namespace RandomProject
                 client1.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                 // selecting country from generated previous addresses
-                var countries = content.Select(x => x.country);
+                var countries = content.Select(x => x.Country);
                 Console.WriteLine();
                 foreach (var country in countries)
                 {
@@ -79,8 +78,9 @@ namespace RandomProject
                         var content1 = await result1.Content.ReadFromJsonAsync<List<Country>>();
                         foreach (var showMe in content1)
                         {
-                            Console.WriteLine(showMe.capital[0]);
-                            Console.WriteLine(showMe.population);
+                            Console.WriteLine(showMe.Capital[0]);
+                            Console.WriteLine(showMe.Population);
+                            Console.WriteLine(string.Join(", ", showMe.Languages.Select(x => x.Value)));
                         }
                         Console.WriteLine();
                     }
