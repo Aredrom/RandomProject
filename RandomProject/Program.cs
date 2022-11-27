@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics.Metrics;
 
 namespace RandomProject
 {
@@ -9,6 +10,8 @@ namespace RandomProject
     {
         static async Task Main(string[] args)
         {
+            // PART I
+
             Console.WriteLine("Type number between 5 and 20:");
 
             try
@@ -49,6 +52,12 @@ namespace RandomProject
                 {
                     Console.WriteLine(JToken.FromObject(address));
                 }
+
+
+
+                // PART II
+
+
             }
             catch(Exception ex)
             {
