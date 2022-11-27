@@ -78,7 +78,14 @@ namespace RandomProject
                         var content1 = await result1.Content.ReadFromJsonAsync<List<Country>>();
                         foreach (var showMe in content1)
                         {
-                            Console.WriteLine(showMe.Capital[0]);
+                            if (showMe.Capital?.Any() != true)
+                            {
+                                Console.WriteLine("No capital!");
+                            }
+                            else
+                            {
+                                Console.WriteLine(showMe.Capital.First());
+                            }                            
                             Console.WriteLine(showMe.Population);
                             Console.WriteLine(string.Join(", ", showMe.Languages.Select(x => x.Value)));
                         }
