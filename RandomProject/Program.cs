@@ -43,6 +43,8 @@ namespace RandomProject
                 // sorting & displaying data
                 var sortedCountries = allCountries.OrderByDescending(x => x.Population);
                 DisplayData(sortedCountries);
+
+                Console.ReadLine();
             }
             catch (Exception ex)
             {
